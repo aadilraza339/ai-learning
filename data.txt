@@ -1,0 +1,7 @@
+Our company offers 3 plans:
+Basic: ₹499/month
+Pro: ₹999/month
+Enterprise: Custom pricing
+
+Refunds are available within 7 days.
+Support is available via email and chat.
