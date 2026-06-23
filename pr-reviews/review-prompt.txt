@@ -1,0 +1,129 @@
+# GitHub Pull Request Review
+
+Please review this Pull Request and provide detailed feedback.
+
+## PR Information
+- **PR Number:** #1806
+- **Title:** Add forceNotification option to generateRelievingLetter
+- **Author:** aadilraza339
+- **URL:** https://github.com/wysbryxtech/peoplefirst-api/pull/1806
+
+## Review Checklist
+
+Please analyze the code changes and provide feedback on:
+
+1. **Code Quality**
+   - Code readability and maintainability
+   - Adherence to best practices
+   - Code organization and structure
+
+2. **Potential Bugs**
+   - Logic errors
+   - Edge cases not handled
+   - Null/undefined checks
+   - Error handling
+
+3. **Security Issues**
+   - Input validation
+   - Authentication/authorization
+   - Data exposure
+   - Injection vulnerabilities
+
+4. **Performance Concerns**
+   - Inefficient algorithms
+   - Memory leaks
+   - Database query optimization
+   - Unnecessary re-renders (for frontend)
+
+5. **Testing**
+   - Test coverage
+   - Missing test cases
+   - Test quality
+
+6. **Documentation**
+   - Code comments
+   - API documentation
+   - README updates
+
+## Code Diff
+
+```diff
+diff --git a/src/routes/separation/nocFormsUnified.ts b/src/routes/separation/nocFormsUnified.ts
+index b957e49e..e10e3d91 100644
+--- a/src/routes/separation/nocFormsUnified.ts
++++ b/src/routes/separation/nocFormsUnified.ts
+@@ -62,6 +62,7 @@ async function maybeGenerateRelievingLetter(opts: {
+   userId: string
+   tenant: string
+   log: FastifyRequest["log"]
++  forceNotification?: boolean
+ }): Promise<boolean> {
+   if (!opts.shouldTrigger) return false
+ 
+@@ -82,6 +83,7 @@ async function maybeGenerateRelievingLetter(opts: {
+     separationId: opts.separationRequestId,
+     userId: opts.userId,
+     tenant: opts.tenant,
++    forceNotification: opts.forceNotification,
+   })
+ 
+   if (!result.success) {
+@@ -340,6 +342,7 @@ export default async function nocFormsUnifiedRoutes(fastify: FastifyInstance) {
+         userId: request.user.userId,
+         tenant: request.user.tenant,
+         log: request.log,
++        forceNotification: body.status === "NOC_STATUS.COMPLETED" && type === "hropsPreLwd" && region === "UK",
+       })
+ 
+       return { success: true, data: result, relievingLetterGenerated }
+@@ -437,6 +440,7 @@ export default async function nocFormsUnifiedRoutes(fastify: FastifyInstance) {
+         userId: request.user.userId,
+         tenant: request.user.tenant,
+         log: request.log,
++        forceNotification: body.status === "NOC_STATUS.COMPLETED" && type === "hropsPreLwd" && region === "UK",
+       })
+ 
+       return { success: true, data: result, relievingLetterGenerated }
+diff --git a/src/services/separation/generateRelievingLetter.ts b/src/services/separation/generateRelievingLetter.ts
+index 5e51d9d1..f5b61e31 100644
+--- a/src/services/separation/generateRelievingLetter.ts
++++ b/src/services/separation/generateRelievingLetter.ts
+@@ -35,6 +35,7 @@ interface GenerateRelievingLetterParams {
+   actualLwd?: string
+   skipDbInsert?: boolean // Set to true when regenerating (don't insert new record)
+   skipNotification?: boolean // Set to true when regenerating (caller sends its own notification)
++  forceNotification?: boolean // Set to true to notify even for involuntary separations (e.g. UK hropsPreLwd)
+ }
+ 
+ interface GenerateRelievingLetterResult {
+@@ -66,6 +67,7 @@ export async function generateRelievingLetter({
+   actualLwd,
+   skipDbInsert = false, // Default to false for initial generation
+   skipNotification = false, // Default to false for initial generation
++  forceNotification = false,
+ }: GenerateRelievingLetterParams): Promise<GenerateRelievingLetterResult> {
+   try {
+     // Query separation details with related employee information
+@@ -243,7 +245,7 @@ export async function generateRelievingLetter({
+     // Involuntary: generate the letter (above) but never notify the employee.
+     // Skip notification when called from regeneration — the caller sends its own
+     // LWD change notification instead.
+-    if (!skipNotification && details.separationType === SEPARATION_CATEGORY.VOLUNTARY) {
++    if (!skipNotification && (forceNotification || details.separationType === SEPARATION_CATEGORY.VOLUNTARY)) {
+       await sendNotification({
+         fastify,
+         separationId: separationId,
+```
+
+## Instructions
+
+Please provide:
+1. **Summary:** Overall assessment of the PR
+2. **Critical Issues:** Must-fix issues (bugs, security)
+3. **Suggestions:** Nice-to-have improvements
+4. **Positive Feedback:** What was done well
+
+Format your response as GitHub review comments where applicable, with:
+- File path
+- Line number (if specific)
+- Comment text
