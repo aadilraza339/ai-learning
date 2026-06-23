@@ -1,0 +1,856 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ask Your Chats</title>
+  <style>
+    :root {
+      --bg: #f0f4ff;
+      --sidebar-from: #4f46e5;
+      --sidebar-to: #7c3aed;
+      --sidebar-text: rgba(255,255,255,0.9);
+      --sidebar-muted: rgba(255,255,255,0.55);
+      --sidebar-hover: rgba(255,255,255,0.12);
+      --sidebar-active-bg: rgba(255,255,255,0.22);
+      --sidebar-active-text: #fff;
+      --sidebar-border: rgba(255,255,255,0.15);
+      --surface: #fff;
+      --surface2: #f8f9ff;
+      --border: #e0e7ff;
+      --text: #1e1b4b;
+      --muted: #8b8fa8;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --user-bubble: #4f46e5;
+      --bot-bubble: #fff;
+      --bot-bubble-border: #e0e7ff;
+      --reply-bubble: #f0fdf4;
+      --reply-border: #86efac;
+      --input-border: #c7d2fe;
+      --input-bg: #fff;
+      --composer-bg: #fff;
+      --topbar-bg: #fff;
+      --empty-color: #a5b4fc;
+      --secondary-btn: #ede9fe;
+      --secondary-btn-text: #4338ca;
+      --wa-active: #dcfce7;
+      --wa-from-me-bg: #d1fae5;
+      --wa-from-me-border: #6ee7b7;
+      --wa-answer-bg: #f0f4ff;
+      --suggest-bg: #f0fdf4;
+      --suggest-border: #6ee7b7;
+      --suggest-label: #065f46;
+      --suggest-text: #1a1a1a;
+      --dark-toggle-bg: #ede9fe;
+      --dark-toggle-text: #4338ca;
+    }
+    body.dark {
+      --bg: #0f0e1a;
+      --sidebar-from: #1e1b4b;
+      --sidebar-to: #2d1b69;
+      --sidebar-text: rgba(199,210,254,0.9);
+      --sidebar-muted: rgba(165,180,252,0.5);
+      --sidebar-hover: rgba(165,180,252,0.1);
+      --sidebar-active-bg: rgba(165,180,252,0.18);
+      --sidebar-active-text: #c7d2fe;
+      --sidebar-border: rgba(165,180,252,0.15);
+      --surface: #1a1730;
+      --surface2: #151225;
+      --border: #2d2a4a;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --primary: #818cf8;
+      --primary-hover: #6366f1;
+      --user-bubble: #4338ca;
+      --bot-bubble: #1e1b4b;
+      --bot-bubble-border: #2d2a4a;
+      --reply-bubble: #052e16;
+      --reply-border: #166534;
+      --input-border: #2d2a4a;
+      --input-bg: #1a1730;
+      --composer-bg: #1a1730;
+      --topbar-bg: #1a1730;
+      --empty-color: #4338ca;
+      --secondary-btn: #1e1b4b;
+      --secondary-btn-text: #a5b4fc;
+      --wa-active: #052e16;
+      --wa-from-me-bg: #052e16;
+      --wa-from-me-border: #166534;
+      --wa-answer-bg: #1a1730;
+      --suggest-bg: #052e16;
+      --suggest-border: #166534;
+      --suggest-label: #86efac;
+      --suggest-text: #e2e8f0;
+      --dark-toggle-bg: #1e1b4b;
+      --dark-toggle-text: #a5b4fc;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 15px/1.5 system-ui, sans-serif; color: var(--text); background: var(--bg); transition: background .2s, color .2s; }
+    .app { display: grid; grid-template-columns: 260px 1fr; height: 100vh; }
+
+    /* Sidebar */
+    .sidebar { background: linear-gradient(160deg, var(--sidebar-from), var(--sidebar-to)); padding: 16px; overflow-y: auto; color: var(--sidebar-text); }
+    .sidebar h1 { color: var(--sidebar-text); }
+    .main { display: flex; flex-direction: column; height: 100vh; }
+    h1 { font-size: 16px; margin: 0 0 12px; }
+    .ws { padding: 8px 10px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; }
+    .ws:hover { background: var(--sidebar-hover); }
+    .ws.active { background: var(--sidebar-active-bg); color: var(--sidebar-active-text); }
+    .ws small { color: var(--sidebar-muted); }
+    input, button, textarea { font: inherit; }
+    .row { display: flex; gap: 6px; margin-top: 8px; }
+    input[type=text] { flex: 1; padding: 8px; border: 1px solid var(--input-border); border-radius: 8px; background: var(--input-bg); color: var(--text); }
+    input[type=text]:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent); }
+    button { padding: 8px 12px; border: 0; border-radius: 8px; background: var(--primary); color: #fff; cursor: pointer; transition: background .15s; }
+    button:hover:not(:disabled) { background: var(--primary-hover); }
+    button.secondary { background: var(--secondary-btn); color: var(--secondary-btn-text); }
+    button.secondary:hover:not(:disabled) { filter: brightness(.95); }
+    button:disabled { opacity: .5; cursor: default; }
+
+    /* Sidebar inputs and buttons */
+    .sidebar input[type=text] { background: rgba(255,255,255,0.15); border-color: var(--sidebar-border); color: #fff; }
+    .sidebar input[type=text]::placeholder { color: rgba(255,255,255,0.45); }
+    .sidebar button:not(.secondary):not(.icon-btn):not(.clear-btn):not(.ws-actions button) { background: rgba(255,255,255,0.2); }
+    .sidebar button:not(.secondary):not(.icon-btn):not(.clear-btn):not(.ws-actions button):hover { background: rgba(255,255,255,0.3); }
+
+    .topbar { padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--topbar-bg); display: flex; align-items: center; gap: 12px; transition: background .2s; }
+    .chat { flex: 1; overflow-y: auto; padding: 20px; background: var(--bg); transition: background .2s; }
+    .msg { max-width: 760px; margin: 0 auto 14px; }
+    .bubble { padding: 12px 14px; border-radius: 12px; white-space: pre-wrap; }
+    .user .bubble { background: var(--user-bubble); color: #fff; margin-left: auto; max-width: 70%; }
+    .user { display: flex; }
+    .bot .bubble { background: var(--bot-bubble); border: 1px solid var(--bot-bubble-border); color: var(--text); }
+    .sources { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .sources details { cursor: pointer; }
+    .composer { padding: 14px 20px; border-top: 1px solid var(--border); background: var(--composer-bg); transition: background .2s; }
+    .empty { color: var(--empty-color); text-align: center; margin-top: 60px; }
+    .hint { font-size: 12px; color: var(--sidebar-muted); margin-top: 6px; }
+    .sidebar .hint { color: var(--sidebar-muted); }
+    label.upload { display: inline-block; padding: 8px 12px; background: var(--secondary-btn); color: var(--secondary-btn-text); border-radius: 8px; cursor: pointer; }
+    label.upload:hover { filter: brightness(.95); }
+    label.upload input { display: none; }
+    .self-wrap { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+    .self-wrap select { font: inherit; padding: 5px 8px; border: 1px solid var(--input-border); border-radius: 8px; background: var(--input-bg); color: var(--text); }
+    button.mode-ask  { background: var(--secondary-btn); color: var(--secondary-btn-text); }
+    button.mode-reply { background: #059669; color: #fff; }
+    .bot.reply-draft .bubble { background: var(--reply-bubble); border-color: var(--reply-border); }
+    .copy-btn { display: inline-block; margin-top: 6px; font-size: 12px; padding: 3px 10px; background: #059669; color: #fff; border: 0; border-radius: 6px; cursor: pointer; }
+
+    /* Dark mode toggle */
+    .dark-toggle { display: flex; align-items: center; gap: 7px; background: var(--dark-toggle-bg); color: var(--dark-toggle-text); border: none; border-radius: 20px; padding: 5px 12px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background .2s; }
+    .dark-toggle:hover:not(:disabled) { filter: brightness(.95); background: var(--dark-toggle-bg); }
+    .toggle-track { width: 30px; height: 17px; background: var(--muted); border-radius: 9999px; position: relative; transition: background .2s; flex-shrink: 0; }
+    body.dark .toggle-track { background: var(--primary); }
+    .toggle-thumb { width: 13px; height: 13px; background: #fff; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: transform .2s; }
+    body.dark .toggle-thumb { transform: translateX(13px); }
+
+    /* workspace CRUD */
+    .ws { position: relative; }
+    .ws-name { flex: 1; cursor: pointer; }
+    .ws-actions { display: none; gap: 2px; }
+    .ws:hover .ws-actions { display: flex; }
+    .ws:hover small { display: none; }
+    .icon-btn { background: none; border: 0; padding: 3px 5px; border-radius: 5px; cursor: pointer; font-size: 13px; color: var(--sidebar-muted); line-height: 1; }
+    .icon-btn:hover { background: var(--sidebar-hover); color: var(--sidebar-text); }
+    .icon-btn.danger:hover { background: rgba(220,38,38,0.2); color: #fca5a5; }
+    .ws-input { font: inherit; font-size: 14px; padding: 1px 6px; border: 1px solid rgba(255,255,255,0.5); border-radius: 6px; width: 100%; outline: none; background: rgba(255,255,255,0.15); color: #fff; }
+    button.clear-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-size: 12px; padding: 4px 10px; }
+    button.clear-btn:hover { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
+    body.dark button.clear-btn:hover { background: rgba(220,38,38,0.15); }
+
+    /* inline message edit */
+    .edit-msg-btn { display: none; align-self: center; margin-right: 8px; background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+    .msg.user:hover .edit-msg-btn { display: inline-block; }
+    .msg-edit-area { width: 100%; padding: 4px 6px; background: transparent; border: none; outline: 2px solid rgba(255,255,255,0.45); border-radius: 6px; color: #fff; font: inherit; resize: vertical; min-height: 36px; }
+    .msg-edit-actions { display: flex; gap: 6px; margin-top: 6px; justify-content: flex-end; }
+    .save-edit { padding: 4px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: #fff; border-radius: 6px; cursor: pointer; font: inherit; font-size: 13px; }
+    .cancel-edit { padding: 4px 10px; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.65); border-radius: 6px; cursor: pointer; font: inherit; font-size: 13px; }
+
+    /* WhatsApp Live */
+    .wa-section { margin-top: 16px; border-top: 1px solid var(--sidebar-border); padding-top: 14px; }
+    .wa-section h1 { font-size: 15px; margin: 0 0 8px; color: var(--sidebar-text); }
+    .wa-status-text { font-size: 12px; color: var(--sidebar-muted); margin-bottom: 6px; }
+    .wa-qr-wrap { text-align: center; margin: 8px 0; }
+    .wa-qr-wrap img { max-width: 210px; border-radius: 8px; border: 1px solid var(--sidebar-border); }
+    .wa-chat-item { padding: 7px 10px; border-radius: 8px; cursor: pointer; margin-bottom: 2px; color: var(--sidebar-text); }
+    .wa-chat-item:hover { background: var(--sidebar-hover); }
+    .wa-chat-item.active { background: var(--sidebar-active-bg); }
+    .wa-unread { display: inline-block; background: #25d366; color: #fff; border-radius: 9999px; font-size: 11px; padding: 1px 6px; margin-left: 4px; vertical-align: middle; }
+
+    /* WA message bubbles */
+    .wa-msg { max-width: 760px; margin: 0 auto 8px; display: flex; }
+    .wa-msg.from-me { justify-content: flex-end; }
+    .wa-msg.from-me .bubble { background: var(--wa-from-me-bg); border: 1px solid var(--wa-from-me-border); max-width: 70%; color: var(--text); }
+    .wa-msg.from-them .bubble { background: var(--bot-bubble); border: 1px solid var(--bot-bubble-border); max-width: 70%; color: var(--text); }
+    .wa-msg .sender-name { font-size: 11px; font-weight: 600; color: #059669; margin-bottom: 2px; }
+    .wa-msg .msg-time { font-size: 10px; color: var(--muted); text-align: right; margin-top: 4px; }
+
+    /* Suggestion draft */
+    .suggest-draft { background: var(--suggest-bg); border: 1px solid var(--suggest-border); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+    .suggest-draft-label { font-size: 11px; color: var(--suggest-label); font-weight: 600; margin-bottom: 6px; }
+    .suggest-draft-text { white-space: pre-wrap; font-size: 14px; color: var(--suggest-text); }
+    .suggest-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .btn-send-wa { background: #25d366; color: #fff; }
+    .btn-send-wa:hover { background: #16a34a; }
+
+    /* WA ask answer */
+    .wa-answer-box { background: var(--wa-answer-bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; color: var(--text); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--primary) 30%, transparent); border-radius: 3px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <h1>📁 Workspaces</h1>
+    <div id="wsList"></div>
+    <div class="row">
+      <input type="text" id="newWs" placeholder="New context name" />
+      <button id="addWs">+</button>
+    </div>
+    <p class="hint" style="color:rgba(255,255,255,0.55)">Each workspace is an isolated chat context. Upload one WhatsApp export per workspace.</p>
+
+    <div class="wa-section">
+      <h1>📱 WhatsApp Live</h1>
+      <div id="waConnStatus" class="wa-status-text">Not connected</div>
+      <div id="waQRWrap" class="wa-qr-wrap" style="display:none"></div>
+      <button id="waConnectBtn">Connect WhatsApp</button>
+      <button id="waRefreshBtn" style="display:none;margin-left:6px;font-size:12px" class="secondary" onclick="loadWaChats()">↻ Refresh</button>
+      <div id="waChatList" style="margin-top:10px"></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <strong id="wsTitle">Select a workspace</strong>
+      <span style="flex:1"></span>
+      <span id="selfWrap" class="self-wrap" style="display:none">
+        You are:
+        <select id="selfSender"><option value="">pick your name…</option></select>
+      </span>
+      <button id="clearBtn" class="clear-btn" style="display:none" title="Clear conversation history">🗑 Clear chat</button>
+      <button class="dark-toggle" id="darkToggle" title="Toggle dark mode">
+        <span id="darkToggleIcon">🌙</span>
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </button>
+      <label class="upload">📎 Upload WhatsApp .txt
+        <input type="file" id="file" accept=".txt" />
+      </label>
+      <span id="status" class="hint"></span>
+    </div>
+    <div class="chat" id="chat">
+      <div class="empty">Create or pick a workspace, upload a chat, then ask away.</div>
+    </div>
+    <div id="wsComposer" class="composer">
+      <div class="row">
+        <input type="text" id="q" placeholder="When did we first talk? What were our biggest arguments?" />
+        <button id="modeBtn" class="secondary mode-ask" title="Switch between Ask and Reply as me">Ask</button>
+        <button id="ask">Send</button>
+      </div>
+    </div>
+
+    <div id="waComposer" class="composer" style="display:none">
+      <div id="suggestDraft" class="suggest-draft" style="display:none">
+        <div class="suggest-draft-label">💡 AI suggested reply</div>
+        <div id="suggestText" class="suggest-draft-text"></div>
+        <div class="suggest-actions">
+          <button id="sendSuggest" class="btn-send-wa">✓ Send</button>
+          <button id="editSuggest" class="secondary">✏️ Edit</button>
+          <button id="discardSuggest" class="secondary">✗ Discard</button>
+        </div>
+      </div>
+      <div id="waAskAnswer" class="wa-answer-box" style="display:none"></div>
+      <div class="row" style="margin-bottom:6px">
+        <input type="text" id="waAskInput" placeholder="Ask anything about this chat…" />
+        <button id="waAskBtn" class="secondary">Ask</button>
+      </div>
+      <div class="row">
+        <input type="text" id="waMsgInput" placeholder="Type a message…" />
+        <button id="waSuggestBtn" class="mode-reply">💬 Suggest</button>
+        <button id="waSendBtn">Send ↑</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+let current = null;
+let replyMode = false;
+
+async function api(url, opts) {
+  const res = await fetch(url, opts);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || res.statusText);
+  return data;
+}
+
+async function loadWorkspaces() {
+  const list = await api('/api/workspaces');
+  const el = document.getElementById('wsList');
+  el.innerHTML = '';
+  list.forEach((w) => {
+    const div = document.createElement('div');
+    div.className = 'ws' + (current === w.id ? ' active' : '');
+    div.innerHTML = `
+      <span class="ws-name">${escapeHtml(w.name)}</span>
+      <small>${w.message_count}</small>
+      <div class="ws-actions">
+        <button class="icon-btn rename-btn" title="Rename">✏️</button>
+        <button class="icon-btn danger delete-btn" title="Delete">🗑️</button>
+      </div>`;
+    div.querySelector('.ws-name').onclick = () => selectWs(w);
+    div.querySelector('.rename-btn').onclick = (e) => { e.stopPropagation(); startRename(div, w); };
+    div.querySelector('.delete-btn').onclick = (e) => { e.stopPropagation(); deleteWs(w); };
+    el.appendChild(div);
+  });
+}
+
+function startRename(div, w) {
+  const span = div.querySelector('.ws-name');
+  const input = document.createElement('input');
+  input.className = 'ws-input';
+  input.value = w.name;
+  span.replaceWith(input);
+  input.focus();
+  input.select();
+  const save = async () => {
+    const newName = input.value.trim();
+    if (newName && newName !== w.name) {
+      await api(`/api/workspaces/${w.id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName }),
+      });
+      if (current === w.id) document.getElementById('wsTitle').textContent = newName;
+    }
+    loadWorkspaces();
+  };
+  input.onblur = save;
+  input.onkeydown = (e) => { if (e.key === 'Enter') input.blur(); if (e.key === 'Escape') loadWorkspaces(); };
+}
+
+async function deleteWs(w) {
+  if (!confirm(`Delete "${w.name}"?\n\nThis removes the uploaded chat, all messages, and conversation history.`)) return;
+  await api(`/api/workspaces/${w.id}`, { method: 'DELETE' });
+  if (current === w.id) {
+    current = null;
+    document.getElementById('wsTitle').textContent = 'Select a workspace';
+    document.getElementById('chat').innerHTML = '<div class="empty">Create or pick a workspace, upload a chat, then ask away.</div>';
+    document.getElementById('selfWrap').style.display = 'none';
+    document.getElementById('clearBtn').style.display = 'none';
+  }
+  loadWorkspaces();
+}
+
+async function loadSenders(workspaceId, savedSender) {
+  const senders = await api(`/api/workspaces/${workspaceId}/senders`);
+  const sel = document.getElementById('selfSender');
+  sel.innerHTML = '<option value="">pick your name…</option>';
+  senders.forEach((s) => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s;
+    if (s === savedSender) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  document.getElementById('selfWrap').style.display = senders.length ? '' : 'none';
+}
+
+// --- shared helpers ---
+function addCopyBtn(wrap, text) {
+  const btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.textContent = 'Copy reply';
+  btn.onclick = () => { navigator.clipboard.writeText(text); btn.textContent = 'Copied!'; setTimeout(() => (btn.textContent = 'Copy reply'), 1500); };
+  wrap.appendChild(btn);
+}
+
+function addSources(wrap, sources, label) {
+  if (!sources?.length) return;
+  const s = document.createElement('div');
+  s.className = 'sources';
+  s.innerHTML = `<details><summary>${sources.length} ${label}</summary>${
+    sources.map((x) => `<div>• (${x.score}) ${escapeHtml(x.preview)}…</div>`).join('')
+  }</details>`;
+  wrap.appendChild(s);
+}
+
+function addEditBtn(wrap) {
+  const btn = document.createElement('button');
+  btn.className = 'icon-btn edit-msg-btn';
+  btn.title = 'Edit & resend';
+  btn.textContent = '✏️';
+  btn.onclick = (e) => { e.stopPropagation(); startMsgEdit(wrap); };
+  wrap.insertBefore(btn, wrap.firstChild);
+}
+
+function startMsgEdit(wrap) {
+  const bubble = wrap.querySelector('.bubble');
+  const isReply = wrap.dataset.mode === 'reply';
+  const editText = isReply ? bubble.textContent.replace(/^↩ Reply to: /, '') : bubble.textContent;
+
+  wrap.querySelector('.edit-msg-btn').style.display = 'none';
+  const textarea = document.createElement('textarea');
+  textarea.className = 'msg-edit-area';
+  textarea.value = editText;
+  bubble.textContent = '';
+  bubble.appendChild(textarea);
+
+  const actionsEl = document.createElement('div');
+  actionsEl.className = 'msg-edit-actions';
+  actionsEl.innerHTML = '<button class="cancel-edit">Cancel</button><button class="save-edit">Send ↵</button>';
+  bubble.appendChild(actionsEl);
+  textarea.focus();
+  textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+
+  actionsEl.querySelector('.cancel-edit').onclick = () => loadConversations(current);
+  actionsEl.querySelector('.save-edit').onclick = async () => {
+    const newText = textarea.value.trim();
+    if (!newText) return;
+    const convId = wrap.dataset.convId;
+    if (!convId) { loadConversations(current); return; }
+
+    await api(`/api/workspaces/${current}/conversations/${convId}`, { method: 'DELETE' });
+
+    const allMsgs = [...document.getElementById('chat').querySelectorAll('.msg')];
+    const idx = allMsgs.indexOf(wrap);
+    for (let i = idx; i < allMsgs.length; i++) allMsgs[i].remove();
+
+    if (isReply) {
+      const selfSender = document.getElementById('selfSender').value;
+      if (!selfSender) { alert('Pick your name in the "You are:" selector first.'); loadConversations(current); return; }
+      await sendReply(newText, selfSender);
+    } else {
+      await sendAsk(newText);
+    }
+  };
+  textarea.onkeydown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); actionsEl.querySelector('.save-edit').click(); }
+    if (e.key === 'Escape') actionsEl.querySelector('.cancel-edit').click();
+  };
+}
+
+// --- send helpers ---
+async function sendAsk(q) {
+  const chat = document.getElementById('chat');
+  if (chat.querySelector('.empty')) chat.innerHTML = '';
+  const userWrap = addBubble('user', q);
+  const botWrap = addBubble('bot', '…');
+  try {
+    const r = await api(`/api/workspaces/${current}/ask`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: q }),
+    });
+    botWrap.querySelector('.bubble').textContent = r.answer;
+    if (r.convIds) { userWrap.dataset.convId = r.convIds.user; botWrap.dataset.convId = r.convIds.bot; }
+    userWrap.dataset.mode = 'ask';
+    addEditBtn(userWrap);
+    addSources(botWrap, r.sources, 'sources');
+  } catch (err) {
+    botWrap.querySelector('.bubble').textContent = '⚠️ ' + err.message;
+  }
+  chat.scrollTop = chat.scrollHeight;
+}
+
+async function sendReply(q, selfSender) {
+  const chat = document.getElementById('chat');
+  if (chat.querySelector('.empty')) chat.innerHTML = '';
+  const userWrap = addBubble('user', '↩ Reply to: ' + q);
+  const botWrap = addBubble('bot', '…');
+  botWrap.classList.add('reply-draft');
+  try {
+    const r = await api(`/api/workspaces/${current}/reply`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: q, selfSender }),
+    });
+    botWrap.querySelector('.bubble').textContent = r.reply;
+    if (r.convIds) { userWrap.dataset.convId = r.convIds.user; botWrap.dataset.convId = r.convIds.bot; }
+    userWrap.dataset.mode = 'reply';
+    addEditBtn(userWrap);
+    addCopyBtn(botWrap, r.reply);
+    addSources(botWrap, r.sources, 'context excerpts');
+  } catch (err) {
+    botWrap.querySelector('.bubble').textContent = '⚠️ ' + err.message;
+  }
+  chat.scrollTop = chat.scrollHeight;
+}
+
+async function loadConversations(workspaceId) {
+  const msgs = await api(`/api/workspaces/${workspaceId}/conversations`).catch(() => []);
+  const chat = document.getElementById('chat');
+  if (!msgs.length) {
+    chat.innerHTML = '<div class="empty">Ask a question about this chat.</div>';
+    return;
+  }
+  chat.innerHTML = '';
+  for (const m of msgs) {
+    if (m.role === 'user') {
+      const wrap = addBubble('user', m.content);
+      wrap.dataset.convId = m.id;
+      wrap.dataset.mode = m.mode;
+      addEditBtn(wrap);
+    } else {
+      const wrap = addBubble('bot', m.content);
+      wrap.dataset.convId = m.id;
+      if (m.mode === 'reply') { wrap.classList.add('reply-draft'); addCopyBtn(wrap, m.content); }
+      addSources(wrap, m.sources, m.mode === 'reply' ? 'context excerpts' : 'sources');
+    }
+  }
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function selectWs(w) {
+  if (waMode) exitWaMode();
+  current = w.id;
+  document.getElementById('wsTitle').textContent = w.name;
+  document.getElementById('clearBtn').style.display = '';
+  loadConversations(w.id);
+  loadWorkspaces();
+  loadSenders(w.id, w.self_sender);
+}
+
+document.getElementById('addWs').onclick = async () => {
+  const input = document.getElementById('newWs');
+  const name = input.value.trim();
+  if (!name) return;
+  const w = await api('/api/workspaces', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+  input.value = '';
+  await loadWorkspaces();
+  selectWs({ id: w.id, name: w.name });
+};
+
+document.getElementById('file').onchange = async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  if (!current) { alert('Pick a workspace first.'); return; }
+  const status = document.getElementById('status');
+  status.textContent = 'Reading…';
+  const content = await f.text();
+  status.textContent = 'Embedding (may take a moment)…';
+  try {
+    const r = await api(`/api/workspaces/${current}/upload`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileName: f.name, content }),
+    });
+    status.textContent = `✓ ${r.messages} messages, ${r.chunks} chunks`;
+    loadWorkspaces();
+    loadSenders(current, null);
+  } catch (err) {
+    status.textContent = '✗ ' + err.message;
+  }
+  e.target.value = '';
+};
+
+async function ask() {
+  const input = document.getElementById('q');
+  const q = input.value.trim();
+  if (!q) return;
+  if (!current) { alert('Pick a workspace first.'); return; }
+  input.value = '';
+  if (replyMode) {
+    const selfSender = document.getElementById('selfSender').value;
+    if (!selfSender) { alert('Pick your name in the "You are:" selector first.'); return; }
+    await sendReply(q, selfSender);
+  } else {
+    await sendAsk(q);
+  }
+}
+
+function addBubble(role, text) {
+  const chat = document.getElementById('chat');
+  const wrap = document.createElement('div');
+  wrap.className = 'msg ' + role;
+  wrap.innerHTML = `<div class="bubble"></div>`;
+  wrap.querySelector('.bubble').textContent = text;
+  chat.appendChild(wrap);
+  chat.scrollTop = chat.scrollHeight;
+  return wrap;
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+document.getElementById('ask').onclick = ask;
+document.getElementById('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') ask(); });
+document.getElementById('newWs').addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('addWs').click(); });
+
+document.getElementById('modeBtn').onclick = () => {
+  replyMode = !replyMode;
+  const btn = document.getElementById('modeBtn');
+  btn.textContent = replyMode ? 'Reply as me' : 'Ask';
+  btn.className = replyMode ? 'mode-reply' : 'secondary mode-ask';
+  document.getElementById('q').placeholder = replyMode
+    ? 'Paste the message you want to reply to…'
+    : 'When did we first talk? What were our biggest arguments?';
+};
+
+document.getElementById('selfSender').onchange = async (e) => {
+  if (!current) return;
+  await api(`/api/workspaces/${current}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ selfSender: e.target.value }),
+  });
+};
+
+document.getElementById('clearBtn').onclick = async () => {
+  if (!current) return;
+  if (!confirm('Clear all conversation history for this workspace?\n\nThe uploaded chat data is kept — only the Q&A history is removed.')) return;
+  await api(`/api/workspaces/${current}/conversations`, { method: 'DELETE' });
+  document.getElementById('chat').innerHTML = '<div class="empty">Ask a question about this chat.</div>';
+};
+
+// --- WhatsApp Live ---
+let waMode = false;
+let currentWaChat = null;
+let waMyName = null;
+let waConnected = false;
+
+function startSSE() {
+  const es = new EventSource('/api/wa/events');
+  es.onmessage = async (e) => {
+    const data = JSON.parse(e.data);
+    if (data.type === 'status') handleWaStatus(data);
+    else if (data.type === 'message') handleIncomingWaMsg(data);
+  };
+  es.onerror = () => {};
+}
+
+function handleWaStatus(data) {
+  waConnected = data.status === 'ready';
+  if (data.myName) waMyName = data.myName;
+
+  const statusEl = document.getElementById('waConnStatus');
+  const qrWrap = document.getElementById('waQRWrap');
+  const connectBtn = document.getElementById('waConnectBtn');
+
+  const labels = { idle: 'Not connected', connecting: 'Connecting…', qr: 'Scan this QR with your phone',
+    authenticated: 'Authenticated, loading…', ready: `Connected as ${data.myName || 'you'}`, disconnected: 'Disconnected' };
+  statusEl.textContent = labels[data.status] || data.status;
+
+  if (data.status === 'qr' && data.qrDataUrl) {
+    qrWrap.innerHTML = `<img src="${escapeHtml(data.qrDataUrl)}" alt="Scan with WhatsApp" />`;
+    qrWrap.style.display = '';
+    connectBtn.style.display = 'none';
+  } else if (data.status === 'ready') {
+    qrWrap.style.display = 'none';
+    connectBtn.style.display = 'none';
+    document.getElementById('waRefreshBtn').style.display = '';
+    loadWaChats();
+  } else if (data.status === 'idle' || data.status === 'disconnected') {
+    qrWrap.style.display = 'none';
+    connectBtn.style.display = '';
+    connectBtn.disabled = false;
+    connectBtn.textContent = 'Connect WhatsApp';
+    document.getElementById('waRefreshBtn').style.display = 'none';
+    document.getElementById('waChatList').innerHTML = '';
+  } else {
+    qrWrap.style.display = 'none';
+    connectBtn.style.display = 'none';
+  }
+}
+
+function handleIncomingWaMsg(data) {
+  if (waConnected) loadWaChats();
+  if (waMode && currentWaChat?.id === data.chatId) {
+    appendWaMessage(data.message);
+  }
+}
+
+async function loadWaChats() {
+  const el = document.getElementById('waChatList');
+  el.innerHTML = '<div class="hint" style="padding:4px 0">Loading chats…</div>';
+  let chats;
+  try {
+    chats = await api('/api/wa/chats');
+  } catch (err) {
+    el.innerHTML = `<div class="hint" style="color:#dc2626">⚠️ ${escapeHtml(err.message)}</div>
+      <button onclick="loadWaChats()" class="secondary" style="margin-top:6px;font-size:12px">Retry</button>`;
+    return;
+  }
+  el.innerHTML = chats.length ? '' : '<div class="hint">No chats found. <button onclick="loadWaChats()" class="secondary" style="font-size:12px">Refresh</button></div>';
+  chats.forEach((c) => {
+    const div = document.createElement('div');
+    div.className = 'wa-chat-item' + (currentWaChat?.id === c.id ? ' active' : '');
+    div.dataset.chatId = c.id;
+    div.innerHTML = `
+      <div style="display:flex;align-items:center;gap:4px">
+        <strong style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:175px">${escapeHtml(c.name)}</strong>
+        ${c.unreadCount ? `<span class="wa-unread">${c.unreadCount}</span>` : ''}
+      </div>
+      <div style="font-size:11px;color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(c.lastMessage)}</div>`;
+    div.onclick = () => selectWaChat(c);
+    el.appendChild(div);
+  });
+}
+
+async function selectWaChat(c) {
+  waMode = true;
+  currentWaChat = c;
+  current = null;
+
+  document.querySelectorAll('.ws').forEach((el) => el.classList.remove('active'));
+  document.querySelectorAll('.wa-chat-item').forEach((el) => el.classList.remove('active'));
+  [...document.querySelectorAll('.wa-chat-item')].find((el) => el.dataset.chatId === c.id)?.classList.add('active');
+
+  document.getElementById('wsTitle').textContent = c.name;
+  document.getElementById('selfWrap').style.display = 'none';
+  document.getElementById('clearBtn').style.display = 'none';
+  document.getElementById('file').closest('label').style.display = 'none';
+  document.getElementById('wsComposer').style.display = 'none';
+  document.getElementById('waComposer').style.display = '';
+  document.getElementById('suggestDraft').style.display = 'none';
+  document.getElementById('waAskAnswer').style.display = 'none';
+  document.getElementById('waAskInput').value = '';
+  document.getElementById('waMsgInput').value = '';
+
+  const chatEl = document.getElementById('chat');
+  chatEl.innerHTML = '<div class="empty">Loading messages…</div>';
+  try {
+    const msgs = await api(`/api/wa/messages?chatId=${encodeURIComponent(c.id)}&limit=40`);
+    chatEl.innerHTML = '';
+    if (!msgs.length) {
+      chatEl.innerHTML = '<div class="empty">No messages yet.</div>';
+    } else {
+      msgs.forEach((m) => appendWaMessage(m, false));
+    }
+  } catch (err) {
+    chatEl.innerHTML = `<div class="empty">⚠️ ${escapeHtml(err.message)}</div>`;
+  }
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+function appendWaMessage(msg, scroll = true) {
+  const chatEl = document.getElementById('chat');
+  if (chatEl.querySelector('.empty')) chatEl.innerHTML = '';
+  const div = document.createElement('div');
+  div.className = `msg wa-msg ${msg.fromMe ? 'from-me' : 'from-them'}`;
+  const timeStr = msg.timestamp
+    ? new Date(msg.timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : '';
+  div.innerHTML = `<div class="bubble">
+    ${!msg.fromMe && msg.notifyName ? `<div class="sender-name">${escapeHtml(msg.notifyName)}</div>` : ''}
+    <div>${escapeHtml(msg.body || '(media)')}</div>
+    ${timeStr ? `<div class="msg-time">${timeStr}</div>` : ''}
+  </div>`;
+  chatEl.appendChild(div);
+  if (scroll) chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+function exitWaMode() {
+  waMode = false;
+  currentWaChat = null;
+  document.querySelectorAll('.wa-chat-item').forEach((el) => el.classList.remove('active'));
+  document.getElementById('file').closest('label').style.display = '';
+  document.getElementById('wsComposer').style.display = '';
+  document.getElementById('waComposer').style.display = 'none';
+}
+
+async function waGetSuggestion() {
+  const btn = document.getElementById('waSuggestBtn');
+  btn.disabled = true;
+  btn.textContent = '…';
+  document.getElementById('suggestDraft').style.display = 'none';
+  document.getElementById('waAskAnswer').style.display = 'none';
+  try {
+    const r = await api('/api/wa/suggest', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chatId: currentWaChat.id, myName: waMyName || 'me' }),
+    });
+    document.getElementById('suggestText').textContent = r.suggestion;
+    document.getElementById('suggestDraft').style.display = '';
+
+    document.getElementById('sendSuggest').onclick = () => waSendMsg(r.suggestion);
+    document.getElementById('editSuggest').onclick = () => {
+      document.getElementById('waMsgInput').value = r.suggestion;
+      document.getElementById('suggestDraft').style.display = 'none';
+      document.getElementById('waMsgInput').focus();
+    };
+    document.getElementById('discardSuggest').onclick = () => {
+      document.getElementById('suggestDraft').style.display = 'none';
+    };
+  } catch (err) {
+    alert('Could not generate suggestion: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💬 Suggest';
+  }
+}
+
+async function waSendMsg(text) {
+  text = typeof text === 'string' ? text : document.getElementById('waMsgInput').value.trim();
+  if (!text || !currentWaChat) return;
+  document.getElementById('suggestDraft').style.display = 'none';
+  document.getElementById('waMsgInput').value = '';
+  try {
+    await api('/api/wa/send', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chatId: currentWaChat.id, text }),
+    });
+    appendWaMessage({ body: text, fromMe: true, timestamp: Date.now() / 1000 });
+  } catch (err) {
+    alert('Failed to send: ' + err.message);
+  }
+}
+
+async function waAsk() {
+  const input = document.getElementById('waAskInput');
+  const question = input.value.trim();
+  if (!question || !currentWaChat) return;
+  input.value = '';
+  const answerEl = document.getElementById('waAskAnswer');
+  answerEl.textContent = 'Thinking…';
+  answerEl.style.display = '';
+  try {
+    const r = await api('/api/wa/ask', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chatId: currentWaChat.id, myName: waMyName || 'me', question }),
+    });
+    answerEl.textContent = r.answer;
+  } catch (err) {
+    answerEl.textContent = '⚠️ ' + err.message;
+  }
+}
+
+document.getElementById('waConnectBtn').onclick = async () => {
+  const btn = document.getElementById('waConnectBtn');
+  btn.disabled = true;
+  btn.textContent = 'Connecting…';
+  try {
+    await api('/api/wa/connect', { method: 'POST' });
+  } catch (err) {
+    document.getElementById('waConnStatus').textContent = '⚠️ ' + err.message;
+    btn.disabled = false;
+    btn.textContent = 'Connect WhatsApp';
+  }
+};
+document.getElementById('waSuggestBtn').onclick = waGetSuggestion;
+document.getElementById('waSendBtn').onclick = () => waSendMsg();
+document.getElementById('waMsgInput').onkeydown = (e) => { if (e.key === 'Enter') waSendMsg(); };
+document.getElementById('waAskBtn').onclick = waAsk;
+document.getElementById('waAskInput').onkeydown = (e) => { if (e.key === 'Enter') waAsk(); };
+
+// Dark mode
+(function() {
+  if (localStorage.getItem('dark') === '1') document.body.classList.add('dark');
+})();
+document.getElementById('darkToggle').onclick = () => {
+  const dark = document.body.classList.toggle('dark');
+  localStorage.setItem('dark', dark ? '1' : '0');
+  document.getElementById('darkToggleIcon').textContent = dark ? '☀️' : '🌙';
+};
+if (document.body.classList.contains('dark')) document.getElementById('darkToggleIcon').textContent = '☀️';
+
+startSSE();
+
+loadWorkspaces();
+</script>
+</body>
+</html>
