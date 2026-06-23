@@ -632,7 +632,8 @@ function handleWaStatus(data) {
   const connectBtn = document.getElementById('waConnectBtn');
 
   const labels = { idle: 'Not connected', connecting: 'Connecting…', qr: 'Scan this QR with your phone',
-    authenticated: 'Authenticated, loading…', ready: `Connected as ${data.myName || 'you'}`, disconnected: 'Disconnected' };
+    authenticated: 'Authenticated, loading…', ready: `Connected as ${data.myName || 'you'}`, disconnected: 'Disconnected',
+    error: '⚠ WhatsApp unavailable on this server' };
   statusEl.textContent = labels[data.status] || data.status;
 
   if (data.status === 'qr' && data.qrDataUrl) {
@@ -644,6 +645,12 @@ function handleWaStatus(data) {
     connectBtn.style.display = 'none';
     document.getElementById('waRefreshBtn').style.display = '';
     loadWaChats();
+  } else if (data.status === 'error') {
+    qrWrap.style.display = 'none';
+    connectBtn.style.display = '';
+    connectBtn.disabled = false;
+    connectBtn.textContent = 'Retry';
+    statusEl.title = data.error || '';
   } else if (data.status === 'idle' || data.status === 'disconnected') {
     qrWrap.style.display = 'none';
     connectBtn.style.display = '';

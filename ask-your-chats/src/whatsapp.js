@@ -65,7 +65,13 @@ export async function initWhatsApp() {
     } catch (_) {}
   });
 
-  waClient.initialize();
+  waClient.initialize().catch((err) => {
+    console.error('WhatsApp init failed:', err.message);
+    waState = { status: 'error', qr: null, myName: null, error: err.message };
+    initialized = false;
+    waClient = null;
+    waEvents.emit('update', { type: 'status', ...waState });
+  });
   return waState;
 }
 
