@@ -15,9 +15,10 @@ try { db.exec(`ALTER TABLE workspaces ADD COLUMN self_sender TEXT`); } catch (_)
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS workspaces (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    name       TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT NOT NULL,
+    self_sender TEXT,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
   CREATE TABLE IF NOT EXISTS documents (
